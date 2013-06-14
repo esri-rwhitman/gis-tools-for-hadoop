@@ -17,6 +17,7 @@ import org.apache.avro.io.DatumWriter;
 //import org.apache.avro.io.Encoder;
 //import org.apache.avro.io.DecoderFactory;
 //import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.file.CodecFactory;
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
 
@@ -57,6 +58,7 @@ public class QuakesAsAvro {
 		DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<GenericRecord>(writer);
 
 		try {
+			dataFileWriter.setCodec(CodecFactory.snappyCodec());
 			dataFileWriter.create(schema, file);
 			Text key = (Text)ReflectionUtils.newInstance(seqRead.getKeyClass(), config);
 			QuakeWritable value = (QuakeWritable)ReflectionUtils.newInstance(seqRead.getValueClass(), config);
