@@ -2,6 +2,7 @@
        "type": "record",
        "name": "Earthquake",
        "doc": "An Earthquake",
+       "namespace": "com.esri.hadoop.examples",
        "fields": [
                { "name": "qdate", "type": "string" },
                { "name": "latitude", "type": "double" },
