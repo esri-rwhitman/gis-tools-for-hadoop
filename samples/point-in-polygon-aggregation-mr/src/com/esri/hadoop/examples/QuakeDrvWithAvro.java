@@ -4,7 +4,6 @@ import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.AvroValue;
 import org.apache.avro.mapreduce.AvroJob;
 import org.apache.avro.mapreduce.AvroKeyInputFormat;
-import org.apache.avro.Schema;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -58,6 +57,8 @@ public class QuakeDrvWithAvro
 		job.setInputFormatClass(AvroKeyInputFormat.class);
 		job.setOutputFormatClass(TextOutputFormat.class);
 
+		// Trying to parse the equivalent schema from string,
+		// would result in mismatch between Generic & Specific.
 		AvroJob.setInputKeySchema(job, Earthquake.SCHEMA$);
 
 		FileInputFormat.setInputPaths(job, new Path(args[1]));

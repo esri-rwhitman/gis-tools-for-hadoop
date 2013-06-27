@@ -1,8 +1,6 @@
 package com.esri.hadoop.examples;
 
 import java.io.IOException;
-import java.io.FileWriter;
-import java.io.PrintWriter;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -12,8 +10,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.avro.mapred.*;
-import org.apache.avro.mapreduce.*;
+import org.apache.avro.mapred.AvroKey;
 
 import com.esri.core.geometry.Envelope;
 import com.esri.core.geometry.Envelope2D;
