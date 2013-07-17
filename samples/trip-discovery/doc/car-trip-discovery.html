@@ -4,17 +4,16 @@
 <h1>Vehicle Trip Discovery with GIS Tools for Hadoop</h1>
 
 <p>
-A common highway management task is to study potential impact of driver
-carpooling, based on
-automobile GPS position data. To identify potential carpool
-improvements, we set out to study
+An interesting task in highway management is to study potential impact of driver
+carpooling, based on an analysis of automatically collected
+automobile GPS position data. To identify potential enhancements to carpool
+participation, we set out to study
 places that have the highest numbers of trips with
-nearly common origin &amp; destination locations.&nbsp; The source data
-available consists of
-39 million records of vehicle positions in Japan, from data
-transmitted by the GPS units of cars in one day.&nbsp;
-The position data consists of longitude &amp; latitude in CSV (not GPX
-tracks).&nbsp; We used the Hadoop MapReduce framework for parallel
+similar origin and destination locations.  The source data
+for this experiment consists of nearly 40 million vehicle position records
+assembled from a single day of GPS-collected vehicle positions.
+The position data consists of longitude and latitude along with date, time, and speed.
+We used the Hadoop MapReduce framework for parallel
 computation, considering its capability for analyzing larger data sets.</p>
 
 The
@@ -56,36 +55,36 @@ either with command-line <code>hadoop</code> <code>fs</code>, or by using the <e
   <li>The Input local file, is the JSON file output by the previous
 step.</li>
   <li>The
-HDFS parameters for hostname, port, &amp; username - these relate to
+HDFS parameters for hostname, port, and username - these relate to
 the configuration of Hadoop; values can be provided by the system
 administrator (the default port number should work unless the admin has
 configured a non-default port).</li>
-  <li>The HDFS remote file - the path &amp; file name where the tool
+  <li>The HDFS remote file - the path and file name where the tool
 will copy the file.<br>
   </li>
 </ul>
 
 
 <p>Calculations were done in two stages of MapReduce applications on
-Hadoop. As a cursory overview of MapReduce:&nbsp; first a Mapper
+Hadoop. As a cursory overview of MapReduce:  first a Mapper
 associates a list of keys each with a list of values, then for each
 key, a Reducer performs a calculation on the values for that key, and
 emits any output records for that key. The
 first MapReduce application used in our study, creates a grid of cells
 covering Japan,
-infers origin &amp; destination of trips from sequences of vehicle
-positions, and identifies the grid cell containing the origin &amp;
+infers origin and destination of trips from sequences of vehicle
+positions, and identifies the grid cell containing the origin and
 destination point of each inferred trip.<br>
 </p>
 
 <p>Columns of the CSV file of GPS positions, include vehicle ID, date,
-time, position as longitude &amp; latitude (degrees-minutes-seconds),
+time, position as longitude and latitude (degrees-minutes-seconds),
 and speed (km/h). The mapper of the first-stage MapReduce application,
 reads the input CSV data, and treats the combination of car-ID and date
 as the key - and the remainder of the input fields, as the value
 associated with such key.&nbsp; Thus, the data is grouped by car and
 date, for passing to the reducer, a separate list of position
-records&nbsp;for each car &amp; date.<br>
+records for each car and date.<br>
 </p>
 
 <pre>
@@ -129,7 +128,7 @@ public class TripCellMap extends Mapper&lt;LongWritable, Text, Text, CarSortWrit
 <p>In order to support trips that span midnight - when in possession of
 multiple days of data - a mapper could use a key consisting of the car ID only -
 passing to the reducer, a potentially longer list of position records,
-which would need to be sorted by date &amp; time.<br>
+which would need to be sorted by date and time.<br>
 </p>
 
 
@@ -137,7 +136,7 @@ which would need to be sorted by date &amp; time.<br>
 reducer of the first MapReduce application - once per reducer
 node.&nbsp; If we had simply used an equal-angle grid with the
 geographic coordinates, the geodesic area of a cell would have differed
-by about 18% between northernmost &amp; southernmost Japan - so we
+by about 18% between northernmost and southernmost Japan - so we
 generate an equal-area grid, while still using geographic coordinates.
 To
 produce an equal-area grid, the code takes the envelope of the study
@@ -335,9 +334,9 @@ a lone position point).<br>
                     &amp;&amp; nCurTm &gt; nPrvTm + threshold) {
 
                     int idxOrig = queryGrid(DmsUtil.parseDms(origLon),
-                                             DmsUtil.parseDms(origLat));
+                                            DmsUtil.parseDms(origLat));
                     int idxDest = queryGrid(DmsUtil.parseDms(prevLon),
-                                             DmsUtil.parseDms(prevLat));
+                                            DmsUtil.parseDms(prevLat));
                     if (idxOrig &gt;= 0 &amp;&amp; idxDest &gt; 0) {  // discard outliers
                         double[] cellOrig = grid.get(idxOrig);
                         double[] cellDest = grid.get(idxDest);
@@ -393,7 +392,7 @@ in fact moved more than a threshold roaming distance (using <code>GeometryEngine
 
 <p>The input for the second-stage MapReduce job, was the output of the
 first stage, namely the longitude, latitude, and grid-cell bounds of
-both the origin &amp; destination of the trips. The second-stage
+both the origin and destination of the trips. The second-stage
 MapReduce job grouped the inferred trips by origin cell, in the mapper.
 Then for
 each origin cell, the reducer counted trips by grid cell containing the
@@ -488,7 +487,7 @@ either with command-line <code>hadoop</code> <code>fs</code>, or by using the <e
 
 <ul>
 <li>The
-HDFS parameters for hostname, port, &amp; username - these relate to
+HDFS parameters for hostname, port, and username - these relate to
 the configuration of Hadoop - same as with the Copy To HDFS tool.</li><li>The HDFS remote file - is the directory in HDFS generated by the previous
 step - it contains a JSON file.<br></li>
   <li>The Output local file parameter is a
@@ -514,7 +513,8 @@ Geographic Coordinate Systems, Asia, Tokyo.
 </p>
 
 <p> Finally, we used ArcMap to visualize the results in a map.&nbsp; As
-the JSON that was imported had all fields as text (rather than number),
+the JSON that was imported had all fields as text
+(<a href="https://github.com/Esri/spatial-framework-for-hadoop/issues/24">rather than number</a>),
 it was necessary to add an integer field for the count of the trips
 from each origin cell, that ended in the most common destination cell -
 which the ArcMap field calculator populated handily (from the text
@@ -523,7 +523,7 @@ was possible to use this integer-value field for symbols varying by
 quantity. The map shows
 cells that were the origin of five or more trips to a common
 destination cell. Cells that were the origin of 11 or trips to a
-common destination, are symbolized with bigger &amp; darker purple
+common destination, are symbolized with bigger and darker purple
 squares, to highlight candidate areas for carpool suggestions.</p>
 
 <img style="width: 640px; height: 495px;" alt="Map: by origin cell, count of car trips to common destination cell" src="cars-jp20b.png"><br>
@@ -548,8 +548,8 @@ Github, were used:</p>
 library</a> was used for computing equal-area grid cells.</li>
   <li>From <a href="https://github.com/Esri/spatial-framework-for-hadoop">spatial-framework-for-hadoop</a>,
 Hive UDFs were used to create
-geometries from raw data, along with API utilities to export &amp; import
-data to &amp; from
+geometries from raw data, along with API utilities to export and import
+data to and from
 JSON.</li>
   <li>Geoprocessing tools were used from <a href="https://github.com/Esri/geoprocessing-tools-for-hadoop">geoprocessing-tools-for-hadoop</a>,
 to import results into ArcMap for visualization, as well as to export a
