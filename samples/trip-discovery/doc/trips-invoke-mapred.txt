@@ -1,0 +1,10 @@
+env HADOOP_CLASSPATH=../lib/esri-geometry-api.jar:../lib/spatial-sdk-hadoop.jar\
+  hadoop jar trip-discovery.jar com.esri.hadoop.examples.trip.TripCellDrv \
+  -libjars ../lib/esri-geometry-api.jar,../lib/spatial-sdk-hadoop.jar \
+  15 500 trips/japan-tokyo-gcs.json trips/vehicle-positions.csv \
+  out-trips-inferred
+
+env HADOOP_CLASSPATH=../lib/esri-geometry-api.jar \
+  hadoop jar trip-discovery.jar com.esri.hadoop.examples.trip.TripCorrDrv \
+  -libjars ../lib/esri-geometry-api.jar \
+  1 'out-trips-inferred/part-r-*' out-trips-by-origin-cell

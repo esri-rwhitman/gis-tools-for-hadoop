@@ -1,7 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
-
-  
   <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>car-trip-discovery</title></head><body>
 <h1>Vehicle Trip Discovery with GIS Tools for Hadoop</h1>
 
@@ -43,8 +41,6 @@ the remaining parameters, the defaults are suitable: JSON type (<span style="fon
 (unchecked).<br>
 </p>
 
-<p><br>
-</p>
 
 <p>Then the JSON file representing the features, was copied to HDFS, to
 be accessible to the computations on Hadoop.&nbsp; This can be done
@@ -69,10 +65,6 @@ will copy the file.<br>
   </li>
 </ul>
 
-<p>
-</p>
-
-<br>
 
 <p>Calculations were done in two stages of MapReduce applications on
 Hadoop. As a cursory overview of MapReduce:&nbsp; first a Mapper
@@ -96,16 +88,16 @@ date, for passing to the reducer, a separate list of position
 records&nbsp;for each car &amp; date.<br>
 </p>
 
-<script src="https://gist.github.com/randallwhitman/5646265.js"></script><noscript><a href="https://gist.github.com/randallwhitman/5646265">[Source code:
-mapper on raw data]</a></noscript>
+<iframe src="TripCellMapper.txt"
+ alt="[Source code: mapper on raw data]"
+ style="width:100%;height:36em"></iframe>
+
 <p>In order to support trips that span midnight - when in possession of
 multiple days of data - a mapper could use a key consisting of the car ID only -
 passing to the reducer, a potentially longer list of position records,
 which would need to be sorted by date &amp; time.<br>
 </p>
 
-<p><br>
-</p>
 
 <p>The grid of cells to cover Japan, is calculated in the setup of the
 reducer of the first MapReduce application - once per reducer
@@ -129,8 +121,11 @@ and dividing into the constant area to get the Y-axis angle for each
 row of the grid.<br>
 </p>
 
-<script src="https://gist.github.com/randallwhitman/5645293.js"></script><noscript><a href="https://gist.github.com/randallwhitman/5645293">[Source code:
-buildGrid]</a></noscript>
+<iframe src="TripCellRed-setup.txt"
+ alt="[Source code: buildGrid]"
+ style="width:100%;height:93em"></iframe>
+
+
 <p>Finding the cell containing a location point, when the cells are
 stored as an array of bounds, and each row has the same number of
 cells, proceeds as follows.&nbsp; The X-axis index is a straightforward
@@ -139,8 +134,11 @@ possible overshoot or undershoot, due to varying cell height.&nbsp;
 Then <code>cellIndex = xIndex + xCount * yIndex</code>.<br>
 </p>
 
-<script src="https://gist.github.com/randallwhitman/5645461.js"></script><noscript><a href="https://gist.github.com/randallwhitman/5645461">[Source code:
-queryGrid]</a></noscript>
+<iframe src="TripCellRed-queryGrid.txt"
+ alt="[Source code: queryGrid]"
+ style="width:100%;height:30em"></iframe>
+
+
 <p>Inferred trips were calculated as follows.&nbsp; The GPS units in
 the cars transmit a point of position data about every 30 seconds (with
 some variation), while the car is on. For successive positions for the
@@ -152,9 +150,11 @@ day, is interpreted as the destination of a trip (except in the case of
 a lone position point).<br>
 </p>
 
-<script src="https://gist.github.com/randallwhitman/5645688.js"></script>
-<noscript><a href="https://gist.github.com/randallwhitman/5645688">[Source code:
-infer trips]</a></noscript>
+<iframe src="TripCellRed-reduce.txt"
+ alt="[Source code: infer trips]"
+ style="width:100%;height:85em"></iframe>
+
+
 <p>This trip-inference computation relies on the fact that the car GPS
 unit does not transmit data when the car is off. For trip discovery on
 data from GPS units that continue transmitting while the vehicle is
@@ -173,24 +173,31 @@ each origin cell, the reducer counted trips by grid cell containing the
 destination of the trip, to determine - for that origin cell - the
 number of trips ending in the most-common destination cell.</p>
 
-<script src="https://gist.github.com/randallwhitman/5646184.js"></script><noscript><a href="https://gist.github.com/randallwhitman/5646184">[Source code:
-common destination by origin cell]</a></noscript>
+<iframe src="TripCorrRed-reduce.txt"
+ alt="[Source code: common destination by origin cell]"
+ style="width:100%;height:31em"></iframe>
+
+
 <p>To execute the calculations, the MapReduce jobs can be invoked by
 using either the <em>Execute Workflow</em> tool in ArcMap, or the
 command
 line.&nbsp; Here are recipes for invoking the MapReduce jobs from
 command line:</p>
 
-<script src="https://gist.github.com/randallwhitman/5665998.js"></script>
-<noscript><a href="https://gist.github.com/randallwhitman/5665998">[Command line:
-invoke MapReduce jobs]</a></noscript>
+<iframe src="trips-invoke-mapred.txt"
+ alt="[Command line: invoke MapReduce jobs]"
+ style="width:100%;height:11em"></iframe>
+
+
 <p>The tab-separated output was converted to JSON - a format suitable
 for import to ArcMap - with Hive queries using ST_Geometry
 functions from GIS Tools for Hadoop.</p>
 
-<script src="https://gist.github.com/randallwhitman/5666539.js"></script>
-<noscript><a href="https://gist.github.com/randallwhitman/5666539">[Hive query:
-convert to JSON from tab-separated]</a></noscript>
+<iframe src="trips-result-json.txt"
+ alt="[Hive query: convert to JSON from tab-separated]"
+ style="width:100%;height:17em"></iframe>
+
+
 <p>Next, the JSON file of results, was copied from HDFS, to
 be accessible to ArcMap.&nbsp; This can be done
 either with command-line <code>hadoop</code> <code>fs</code>, or by using the <em>Copy From HDFS</em> tool.</p>

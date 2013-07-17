@@ -1,0 +1,98 @@
+    @Override
+    public void setup(Context context)
+    {
+        // First pull values from the configuration     
+        Configuration config = context.getConfiguration();
+
+        // minutes stoppage delineating trips
+        int minutes = config.getInt("com.esri.trip.threshold", 15);
+        threshold = minutes * 60;  // minutes -> seconds
+        // Nominal/target length of side of grid cell (meters)
+        double gridSide = 1000.;
+        String sizeArg = config.get("com.esri.trip.cellsize", "1000");
+        if (sizeArg.length() > 0 && sizeArg.charAt(0) != '-') {
+            double trySize = Double.parseDouble(sizeArg);
+            if (trySize >= 100)  //likely unrealistic smaller than 200m to 500m
+                gridSide = trySize;  // input as meters
+            else if (trySize > 0)
+                gridSide = 1000 * trySize;  // input as km
+        }
+
+        String featuresPath = config.get("com.esri.trip.input");
+        FSDataInputStream iStream = null;
+        spatialReference = SpatialReference.create(4301);  //  GCS_Tokyo
+
+        try {
+            // load the JSON file provided as argument
+            FileSystem hdfs = FileSystem.get(config);
+            iStream = hdfs.open(new Path(featuresPath));
+            country = EsriFeatureClass.fromJson(iStream);
+        } 
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            if (iStream != null)
+            {
+                try {
+                    iStream.close();
+                } catch (IOException e) { }
+            }
+        }
+
+        // build the grid of cells
+        if (country != null) {
+            envelope = new Envelope();
+            country.features[0].geometry.queryEnvelope(envelope);
+            buildGrid(gridSide);
+        }
+    }
+
+    private void buildGrid(double gridSide) {   // Nominal length of side (m)
+        double cellArea = gridSide*gridSide;
+        latMax = envelope.getYMax() + .005;  // +.005 to catch nearby outliers
+        latMin = envelope.getYMin() - .005;  // -.005 to catch nearby outliers
+        final double latMid = (latMax + latMin) / 2;
+        latExtent = latMax-latMin;
+        lonMin = envelope.getXMin() - .005;  // -.005 to catch nearby outliers
+        lonMax = envelope.getXMax() + .005;  // +.005 to catch nearby outliers
+        final double lonOneDeg = lonMin + 1;  // arbitrary longitude for
+                                              // establishing lenOneDegBaseline
+        Point fromPt = new Point(lonMin, latMid),
+            toPt = new Point(lonOneDeg, latMid);
+        // geodesicDistanceOnWGS84 is an approximation as we are using a
+        // different GCS, but expect it to be a good approximation as we are
+        // using proportions only, not positions, with it.
+        final double lenOneDegBaseline =
+            GeometryEngine.geodesicDistanceOnWGS84(fromPt, toPt);
+        // GeometryEngine.distance "Calculates the 2D planar distance".
+        // angle: GeometryEngine.distance(fromPt, toPt, spatialReference);
+        arcLon = gridSide / lenOneDegBaseline;  // longitude arc of grid cell
+        final double latOneDeg = latMid + 1;
+        toPt.setXY(lonMin, latOneDeg);
+        final double htOneDeg =
+            GeometryEngine.geodesicDistanceOnWGS84(fromPt, toPt);
+
+        int enough =
+          (int)(Math.ceil(.000001 + (lonMax-lonMin)*lenOneDegBaseline/gridSide))
+           * (int)(Math.ceil(.000001 + latExtent*htOneDeg/gridSide)) ;
+        grid = new ArrayList<double[]>(enough);
+        double xlon, ylat;
+        // Could filter out cells that do not overlap country polygon
+        // (by using quadtree, as in sample with earthquakes).
+        for (ylat = latMin, yCount = 0;  ylat < latMax;  yCount++) {
+            fromPt.setXY(lonMin, ylat);
+            toPt.setXY(lonMin+arcLon, ylat);
+            double xlen = GeometryEngine.geodesicDistanceOnWGS84(fromPt, toPt);
+            double height = cellArea/xlen;  // meters
+            double arcLat = height / htOneDeg;
+            for (xlon = lonMin, xCount = 0;  xlon < lonMax;
+                 xlon += arcLon, xCount++) {
+                double[] tmp = {xlon, ylat, xlon+arcLon, ylat+arcLat};
+                grid.add(tmp);
+            }
+            ylat += arcLat;
+        }
+    }

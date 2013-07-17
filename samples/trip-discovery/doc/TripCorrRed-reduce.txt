@@ -1,0 +1,32 @@
+    public void reduce(Text key, Iterable<TripCorrWrit> values, Context ctx)
+        throws IOException, InterruptedException {
+
+        final int INIT_SIZE = 8000;
+        HashMap<String,Long> records = new HashMap<String,Long>(INIT_SIZE);
+
+        String sval,  // destination cell bounds - iterator value, hashmap key
+               maxDest = null;  // most common destination cell (bounds)
+        long totCount = 0, maxCount = 0;
+        for (TripCorrWrit entry : values) {
+            sval = entry.toString();
+            long newCount = records.containsKey(sval) ? 1+records.get(sval) : 1;
+            records.put(sval, newCount);
+            if (newCount > maxCount) {
+                maxCount = newCount;
+                maxDest = sval;
+            }
+            totCount++;
+        }  // /for
+        Configuration config = ctx.getConfiguration();
+        //minimum count per cell, for inclusion in output
+        int minPoints = config.getInt("com.esri.trip.threshold", 10);
+        minPoints = minPoints < 2 ? 1 : minPoints;
+        if (totCount >= minPoints) {
+            double pct = 0.;   // If only one trip going to each destination
+            if (maxCount > 1)  // cell, report zero correlation.
+                pct = 100. * (double)maxCount / (double)totCount;
+            ctx.write(key, new Text(String.format("%d\t%d\t%f\t%s",
+                                                  totCount, maxCount, pct,
+                                                  maxDest)));
+        }
+    }

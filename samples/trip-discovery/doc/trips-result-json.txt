@@ -1,0 +1,12 @@
+create external table trips_by_origin_cell(leftlon double, botlat double, rightlon double, toplat double, totnum int, samedest int, pct double, destlhs double, destbot double, destrhs double, desttop double)
+row format delimited fields terminated by '\t'
+location '/user/rwhitman/out-trips-by-origin-cell';
+
+create external table trip_origin_json  (totnum int, samedest int, pct double, destlhs double, destbot double, destrhs double, desttop double, shape binary)
+row format serde 'com.esri.hadoop.hive.serde.JsonSerde'
+stored as inputformat 'com.esri.json.hadoop.UnenclosedJsonInputFormat'
+outputformat 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+location '/user/rwhitman/trip-origin-json';
+
+insert overwrite table trip_origin_json select totnum, samedest, pct, destlhs, destbot, destrhs, desttop,
+  ST_Polygon(leftlon,botlat, rightlon,botlat, rightlon,toplat, leftlon,toplat) from trips_by_origin_cell;

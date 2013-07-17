@@ -1,0 +1,30 @@
+    private int queryGrid(double longitude, double latitude) {
+        int cellIndex; // xIdx + xCount * yIdx
+        if (longitude >= lonMin && longitude <= lonMax  &&
+            latitude >= latMin  && latitude <= latMax)  {   // avoid outliers
+            int xIdx = (int)((longitude-lonMin)/arcLon);
+            if (xIdx >= 0 && xIdx < xCount) {
+                // first quotient is approximate, to refine
+                int yIdx = (int)(yCount*(latitude-latMin)/latExtent);
+                yIdx = yIdx < yCount ? yIdx : yCount - 1;
+                cellIndex = xIdx + xCount * yIdx;
+                // Expect either correct, or one of too high or low, not both
+                while (grid.get(cellIndex)[1] > latitude) {   // bottom too high
+                    yIdx--;
+                    cellIndex -= xCount;
+                }
+                while (grid.get(cellIndex)[3] < latitude) {   // top too low
+                    yIdx++;
+                    cellIndex += xCount;
+                }
+                if (yIdx < 0 || yIdx >= yCount) {  // bug
+                    cellIndex = -3;
+                }
+            } else {  // bug
+                cellIndex = -2;
+            }
+        } else {  // outlier
+            cellIndex = -1;
+        }
+        return cellIndex;
+    }
