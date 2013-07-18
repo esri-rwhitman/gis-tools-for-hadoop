@@ -142,7 +142,7 @@ To
 produce an equal-area grid, the code takes the envelope of the study
 area, and uses the middle latitude as a baseline.&nbsp; It uses
 <code>GeometryEngine.geodesicDistanceOnWGS84</code> to calculate the
-length of a 1°
+length of a 1&deg;
 arc along the latitude (using WGS84 to make a close approximation of
 distance - not position - on Tokyo GCS), then uses proportions to find
 the X-axis angle corresponding to the desired cell width.&nbsp; With a
@@ -512,14 +512,11 @@ Geographic Coordinate Systems, Asia, Tokyo.
 <p><img style="width: 515px; height: 469px;" alt="[Feature Class Properties: Spatial Reference]" src="spatial-reference-arcmap.png"><br>
 </p>
 
-<p> Finally, we used ArcMap to visualize the results in a map.&nbsp; As
-the JSON that was imported had all fields as text
-(<a href="https://github.com/Esri/spatial-framework-for-hadoop/issues/24">rather than number</a>),
-it was necessary to add an integer field for the count of the trips
-from each origin cell, that ended in the most common destination cell -
-which the ArcMap field calculator populated handily (from the text
-field that contained the number as character digits).&nbsp; Then, it
-was possible to use this integer-value field for symbols varying by
+<p> Finally, we used ArcMap to visualize the results in a map.
+The feature class imported from JSON, has an integer field for the count of the trips
+from each origin cell, that ended in the most common destination cell.
+In ArcMap, it
+is possible to use this integer-value field for symbols varying by
 quantity. The map shows
 cells that were the origin of five or more trips to a common
 destination cell. Cells that were the origin of 11 or trips to a
@@ -528,11 +525,9 @@ squares, to highlight candidate areas for carpool suggestions.</p>
 
 <img style="width: 640px; height: 495px;" alt="Map: by origin cell, count of car trips to common destination cell" src="cars-jp20b.png"><br>
 
-<p>A
-potential further study could additionally consider the following:</p>
+<p>A potential further study could additionally consider the following:</p>
 
 <ul>
-
   <li>The location and distance of the most-common destination cell,
 for each origin cell of interest;</li>
   <li>Time slices, as many people need to go to their destination
@@ -543,7 +538,6 @@ during a specific part of the day.</li>
 Github, were used:</p>
 
 <ul>
-
   <li>The <a href="https://github.com/Esri/geometry-api-java">geometry-api-java
 library</a> was used for computing equal-area grid cells.</li>
   <li>From <a href="https://github.com/Esri/spatial-framework-for-hadoop">spatial-framework-for-hadoop</a>,
@@ -564,7 +558,5 @@ of using a Hadoop cluster to run similar calculations on much bigger
 data sets.</p>
 <p>The complete source code is <a href="https://github.com/randallwhitman/gis-tools-for-hadoop">available on Github</a>.<br>
 </p>
-
-
 
 </body></html>

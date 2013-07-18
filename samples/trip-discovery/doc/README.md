@@ -16,14 +16,14 @@ included with ArcGIS. It was projected to the Tokyo Geographic Coordinate
 System, with the _Project_ geoprocessing tool in ArcMap, to match the spatial
 reference of the GPS data.  
 
-![\[GP Tool: Project to Tokyo GCS\]](project-japan-to-tgcs.png)  
+![[GP Tool: Project to Tokyo GCS]](project-japan-to-tgcs.png)  
 
   
 
 Next, the study area was exported to JSON format, suitable for use in
 computations on Hadoop, by using the _Features To JSON_ tool.
 
-![\[GP Tool: Features To JSON\]](features-json-japan-arcmap.png)  
+![[GP Tool: Features To JSON]](features-json-japan-arcmap.png)  
 
 The input feature class is the country of Japan in Tokyo GCS, as produced in
 the previous step.  The output JSON parameter is a filename of our choosing,
@@ -34,7 +34,7 @@ Then the JSON file representing the features, was copied to HDFS, to be
 accessible to the computations on Hadoop.  This can be done either with
 command-line `hadoop` `fs`, or by using the _Copy To HDFS_ tool.
 
-![\[GP Tool: Copy To HDFS\]](copy-to-hdfs-japan-arcmap.png)  
+![[GP Tool: Copy To HDFS]](copy-to-hdfs-japan-arcmap.png)  
 
 The tool expects the following parameters:
 
@@ -438,7 +438,7 @@ Next, the JSON file of results, was copied from HDFS, to be accessible to
 ArcMap.  This can be done either with command-line `hadoop` `fs`, or by using
 the _Copy From HDFS_ tool.
 
-![\[GP Tool: Copy From HDFS\]](copy-from-hdfs-trips-arcmap.png)
+![[GP Tool: Copy From HDFS]](copy-from-hdfs-trips-arcmap.png)
 
 The tool expects the following parameters:
 
@@ -450,7 +450,7 @@ The tool expects the following parameters:
 Then the results were imported to ArcMap as a feature class, by using the
 _JSON To Features_ tool.
 
-![\[GP tool: JSON To Features\]](json-features-trips-arcmap.png)
+![[GP tool: JSON To Features]](json-features-trips-arcmap.png)
 
 The Input JSON is the file copied over in the previous step.  The Output
 feature class is a new ArcGIS feature class, with a name of our choosing.  For
@@ -461,23 +461,18 @@ spatial reference, it is necessary to right click the newly-imported feature
 class in the Catalog - then Properties, XY Coordinate System, Geographic
 Coordinate Systems, Asia, Tokyo.
 
-![\[Feature Class Properties: Spatial Reference\]](spatial-reference-
-arcmap.png)  
+![[Feature Class Properties: Spatial Reference]](spatial-reference-arcmap.png)  
 
-Finally, we used ArcMap to visualize the results in a map.  As the JSON that
-was imported had all fields as text ([rather than
-number](https://github.com/Esri/spatial-framework-for-hadoop/issues/24)), it
-was necessary to add an integer field for the count of the trips from each
-origin cell, that ended in the most common destination cell - which the ArcMap
-field calculator populated handily (from the text field that contained the
-number as character digits).  Then, it was possible to use this integer-value
-field for symbols varying by quantity. The map shows cells that were the
-origin of five or more trips to a common destination cell. Cells that were the
-origin of 11 or trips to a common destination, are symbolized with bigger and
-darker purple squares, to highlight candidate areas for carpool suggestions.
+Finally, we used ArcMap to visualize the results in a map. The feature class
+imported from JSON, has an integer field for the count of the trips from each
+origin cell, that ended in the most common destination cell. In ArcMap, it is
+possible to use this integer-value field for symbols varying by quantity. The
+map shows cells that were the origin of five or more trips to a common
+destination cell. Cells that were the origin of 11 or trips to a common
+destination, are symbolized with bigger and darker purple squares, to
+highlight candidate areas for carpool suggestions.
 
-![Map: by origin cell, count of car trips to common destination cell](cars-
-jp20b.png)  
+![Map: by origin cell, count of car trips to common destination cell](cars-jp20b.png)  
 
 A potential further study could additionally consider the following:
 
