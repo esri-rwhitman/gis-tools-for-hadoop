@@ -61,7 +61,7 @@ list of position records for each car and date.
 
     
     
-    public class TripCellMap extends Mapper<LongWritable, Text, Text, CarSortWritable> {
+    public class TripCellMapper extends Mapper<LongWritable, Text, Text, CarSortWritable> {
     
         // column indices for values in the vehicle CSV
         static final int COL_CAR = 0;  // vehicle ID
@@ -86,10 +86,9 @@ list of position records for each car and date.
             String line = val.toString();
             String[] values = line.split(",");  // no comma inside string in input
             Text key2 = new Text(values[COL_CAR] + "," + values[COL_DAT]);
-            CarSortWritable data =
-                        new CarSortWritable(values[COL_DAT], values[COL_TIM],
-                                            values[COL_LON], values[COL_LAT],
-                                            values[COL_DIR], values[COL_SPD], values[COL_ROD]);
+            CarSortWritable data = new CarSortWritable(values[COL_DAT], values[COL_TIM],
+                                                       values[COL_LON], values[COL_LAT],
+                                                       values[COL_DIR], values[COL_SPD], values[COL_ROD]);
             context.write(key2, data);
     
         }
@@ -120,7 +119,7 @@ angle for each row of the grid.
 
     
     
-        private void buildGrid(double gridSide) {   // Nominal length of side (meters)
+        private void buildGrid(double gridSide) {   // Nominal length of side of grid cell (meters)
             double cellArea = gridSide*gridSide;
             latMax = envelope.getYMax() + .005;  // +.005 to catch nearby outliers (approx. 500m)
             latMin = envelope.getYMin() - .005;  // -.005 to catch nearby outliers
@@ -128,14 +127,13 @@ angle for each row of the grid.
             latExtent = latMax-latMin;
             lonMin = envelope.getXMin() - .005;  // -.005 to catch nearby outliers
             lonMax = envelope.getXMax() + .005;  // +.005 to catch nearby outliers
-            final double lonOneDeg = lonMin + 1;  // arbitrary longitude for
-                                                  // establishing lenOneDegBaseline
+            final double lonOneDeg = lonMin + 1;  // arbitrary longitude for establishing lenOneDegBaseline
             Point fromPt = new Point(lonMin, latMid),
                 toPt = new Point(lonOneDeg, latMid);
             // geodesicDistanceOnWGS84 is an approximation as we are using a different GCS, but expect it
             // to be a good approximation as we are using proportions only, not positions, with it.
             final double lenOneDegBaseline = GeometryEngine.geodesicDistanceOnWGS84(fromPt, toPt);
-            // GeometryEngine.distance "Calculates the 2D planar distance between two geometries.".
+            // GeometryEngine.distance "Calculates the 2D planar distance between two geometries".
             // angle: GeometryEngine.distance(fromPt, toPt, spatialReference);
             arcLon = gridSide / lenOneDegBaseline;  // longitude arc of grid cell
             final double latOneDeg = latMid + 1;
@@ -153,7 +151,7 @@ angle for each row of the grid.
                 double xlen = GeometryEngine.geodesicDistanceOnWGS84(fromPt, toPt);
                 double height = cellArea/xlen;  // meters
                 double arcLat = height / htOneDeg;
-                for (xlon = lonMin, xCount = 0;  xlon < lonMax; xlon += arcLon, xCount++) {
+                for (xlon = lonMin, xCount = 0;  xlon < lonMax;  xlon += arcLon, xCount++) {
                     double[] tmp = {xlon, ylat, xlon+arcLon, ylat+arcLat};
                     grid.add(tmp);
                 }
@@ -166,11 +164,10 @@ angle for each row of the grid.
             // First pull values from the configuration     
             Configuration config = context.getConfiguration();
     
-            // minutes stoppage delineating trips
-            int minutes = config.getInt("com.esri.trip.threshold", 15);
+            int minutes = config.getInt("com.esri.trip.threshold", 15);  //minutes stoppage delineating trips
             threshold = minutes * 60;  // minutes -> seconds
     
-            double gridSide = 1000.;   // Nominal/target length of side of grid cell (meters)
+            double gridSide = 1000.;   // Nominal/average/target length of side of grid cell (meters)
             String sizeArg = config.get("com.esri.trip.cellsize", "1000");
             if (sizeArg.length() > 0 && sizeArg.charAt(0) != '-') {
                 double trySize = Double.parseDouble(sizeArg);
@@ -226,7 +223,7 @@ varying cell height.  Then `cellIndex = xIndex + xCount * yIndex`.
                     int yIdx = (int)(yCount*(latitude-latMin)/latExtent);
                     yIdx = yIdx < yCount ? yIdx : yCount - 1;
                     cellIndex = xIdx + xCount * yIdx;
-                    // Expect either correct, or one of too high or low, not both
+                    // Expect either correct, or one of either too high or too low, not both
                     while (grid.get(cellIndex)[1] > latitude) {   // bottom too high
                         yIdx--;
                         cellIndex -= xCount;
@@ -265,7 +262,7 @@ the case of a lone position point).
             String[] kys = key.toString().split(",");  // carID & date
             Text outKy = new Text(kys[0]);
     
-            // Expect at most tens of thousands of positions per car per day - expect up to thousands. 
+            // Expect at most tens of thousands of positions per car per day - expect up to thousands.
             // (per year, up to 2-3 hundreds of thousands)
             final int MAX_BUFFER_SIZE = 8000;  // would fit a record every 11s all day
             ArrayList<CarSortWritable> records = new ArrayList<CarSortWritable>(MAX_BUFFER_SIZE);
@@ -294,18 +291,18 @@ the case of a lone position point).
                     if (nPrvTm > nOrgTm   //ignore lone points
                         && nCurTm > nPrvTm + threshold) {
     
-                        int idxOrig = queryGrid(DmsUtil.parseDms(origLon),
-                                                DmsUtil.parseDms(origLat));
-                        int idxDest = queryGrid(DmsUtil.parseDms(prevLon),
-                                                DmsUtil.parseDms(prevLat));
+                        int idxOrig = queryGrid(DegreeMinuteSecondUtility.parseDms(origLon),
+                                                DegreeMinuteSecondUtility.parseDms(origLat));
+                        int idxDest = queryGrid(DegreeMinuteSecondUtility.parseDms(prevLon),
+                                                DegreeMinuteSecondUtility.parseDms(prevLat));
                         if (idxOrig >= 0 && idxDest > 0) {  // discard outliers
                             double[] cellOrig = grid.get(idxOrig);
                             double[] cellDest = grid.get(idxDest);
                             ctx.write(outKy,
-                                      new TripCellWrit(theDate, origTime, origLon, origLat, origSpd,
-                                                       cellOrig[0], cellOrig[1], cellOrig[2], cellOrig[3],
-                                                       theDate, prevTime, prevLon, prevLat, prevSpd,
-                                                       cellDest[0], cellDest[1], cellDest[2], cellDest[3]));
+                                      new TripCellWritable(theDate, origTime, origLon, origLat, origSpd,
+                                                           cellOrig[0], cellOrig[1], cellOrig[2], cellOrig[3],
+                                                           theDate, prevTime, prevLon, prevLat, prevSpd,
+                                                           cellDest[0], cellDest[1], cellDest[2], cellDest[3]));
                         }
                         nOrgTm   = nCurTm;
                         origTime = curTime;
@@ -321,18 +318,18 @@ the case of a lone position point).
                 }
     
                 if (/*records.size() > 1 && */ nPrvTm > nOrgTm) {  // no lone point
-                    int idxOrig = queryGrid(DmsUtil.parseDms(origLon),
-                                            DmsUtil.parseDms(origLat));
-                    int idxDest = queryGrid(DmsUtil.parseDms(prevLon),
-                                            DmsUtil.parseDms(prevLat));
+                    int idxOrig = queryGrid(DegreeMinuteSecondUtility.parseDms(origLon),
+                                            DegreeMinuteSecondUtility.parseDms(origLat));
+                    int idxDest = queryGrid(DegreeMinuteSecondUtility.parseDms(prevLon),
+                                            DegreeMinuteSecondUtility.parseDms(prevLat));
                     if (idxOrig >= 0 && idxDest > 0) {  // discard outliers
                         double[] cellOrig = grid.get(idxOrig);
                         double[] cellDest = grid.get(idxDest);
                         ctx.write(outKy,
-                                  new TripCellWrit(theDate, origTime, origLon, origLat, origSpd,
-                                                   cellOrig[0], cellOrig[1], cellOrig[2], cellOrig[3],
-                                                   theDate, prevTime, prevLon, prevLat, prevSpd,
-                                                   cellDest[0], cellDest[1], cellDest[2], cellDest[3]));
+                                  new TripCellWritable(theDate, origTime, origLon, origLat, origSpd,
+                                                       cellOrig[0], cellOrig[1], cellOrig[2], cellOrig[3],
+                                                       theDate, prevTime, prevLon, prevLat, prevSpd,
+                                                       cellDest[0], cellDest[1], cellDest[2], cellDest[3]));
                     }
                 }
             } catch (Exception e) {
@@ -347,7 +344,6 @@ units that continue transmitting while the vehicle is off, it would be
 necessarily to additionally check whether the car has in fact moved more than
 a threshold roaming distance (using `GeometryEngine.geodesicDistanceOnWGS84`).
 
-  
 
 The input for the second-stage MapReduce job, was the output of the first
 stage, namely the longitude, latitude, and grid-cell bounds of both the origin
@@ -359,7 +355,7 @@ common destination cell.
 
     
     
-        public void reduce(Text key, Iterable<TripCorrWrit> values, Context ctx)
+        public void reduce(Text key, Iterable<TripInCommonWritable> values, Context ctx)
             throws IOException, InterruptedException {
     
             final int INIT_SIZE = 8000;
@@ -368,7 +364,7 @@ common destination cell.
             String sval,  // destination cell bounds - iterator value, hashmap key
                    maxDest = null;  // most common destination cell (bounds)
             long totCount = 0, maxCount = 0;
-            for (TripCorrWrit entry : values) {
+            for (TripInCommonWritable entry : values) {
                 sval = entry.toString();
                 long newCount = records.containsKey(sval) ? 1 + records.get(sval) : 1;
                 records.put(sval, newCount);
@@ -383,8 +379,8 @@ common destination cell.
             int minPoints = config.getInt("com.esri.trip.threshold", 10);
             minPoints = minPoints < 2 ? 1 : minPoints;
             if (totCount >= minPoints) {
-                double pct = 0.;   // If only one trip going to each destination
-                if (maxCount > 1)  // cell, report zero correlation.
+                double pct = 0.;   // If only one trip going to each destination cell, report 0% in common.
+                if (maxCount > 1)
                     pct = 100. * (double)maxCount / (double)totCount;
                 ctx.write(key, new Text(String.format("%d\t%d\t%f\t%s",
                                                       totCount, maxCount, pct,
@@ -400,13 +396,13 @@ for invoking the MapReduce jobs from command line:
     
     
     env HADOOP_CLASSPATH=../lib/esri-geometry-api.jar:../lib/spatial-sdk-hadoop.jar \
-      hadoop jar trip-discovery.jar com.esri.hadoop.examples.trip.TripCellDrv \
+      hadoop jar trip-discovery.jar com.esri.hadoop.examples.trip.TripCellDriver \
       -libjars ../lib/esri-geometry-api.jar,../lib/spatial-sdk-hadoop.jar \
       15 500 trips/japan-tokyo-gcs.json trips/vehicle-positions.csv \
       out-trips-inferred
     
     env HADOOP_CLASSPATH=../lib/esri-geometry-api.jar \
-      hadoop jar trip-discovery.jar com.esri.hadoop.examples.trip.TripCorrDrv \
+      hadoop jar trip-discovery.jar com.esri.hadoop.examples.trip.TripInCommonDriver \
       -libjars ../lib/esri-geometry-api.jar \
       1 'out-trips-inferred/part-r-*' out-trips-by-origin-cell
     
