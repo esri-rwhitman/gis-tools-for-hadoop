@@ -8,8 +8,10 @@ trips with similar origin and destination locations. The source data for this
 experiment consists of nearly 40 million vehicle position records assembled
 from a single day of GPS-collected vehicle positions. The position data
 consists of longitude and latitude along with date, time, and speed. We used
-the Hadoop MapReduce framework for parallel computation, considering its
-capability for analyzing larger data sets.
+the Hadoop MapReduce framework for distributed parallel computation,
+considering its capability for analyzing larger data sets.
+
+### Study Area
 
 The study area was the country of Japan, selected from World Map in the data
 included with ArcGIS. It was projected to the Tokyo Geographic Coordinate
@@ -50,6 +52,8 @@ MapReduce application used in our study, creates a grid of cells covering
 Japan, infers origin and destination of trips from sequences of vehicle
 positions, and identifies the grid cell containing the origin and destination
 point of each inferred trip.  
+
+### Read Input CSV
 
 Columns of the CSV file of GPS positions, include vehicle ID, date, time,
 position as longitude and latitude (degrees-minutes-seconds), and speed
@@ -100,6 +104,8 @@ In order to support trips that span midnight - when in possession of multiple
 days of data - a mapper could use a key consisting of the car ID only -
 passing to the reducer, a potentially longer list of position records, which
 would need to be sorted by date and time.  
+
+### Create grid
 
 The grid of cells to cover Japan, is calculated in the setup of the reducer of
 the first MapReduce application - once per reducer node.  If we had simply
@@ -205,6 +211,8 @@ angle for each row of the grid.
         }
     
 
+### Cell containing location point
+
 Finding the cell containing a location point, when the cells are stored as an
 array of bounds, and each row has the same number of cells, proceeds as
 follows.  The X-axis index is a straightforward division by cell width.  The
@@ -244,6 +252,8 @@ varying cell height.  Then `cellIndex = xIndex + xCount * yIndex`.
             return cellIndex;
         }
     
+
+### Discover trips: origin and destination
 
 Inferred trips were calculated as follows.  The GPS units in the cars transmit
 a point of position data about every 30 seconds (with some variation), while
@@ -344,6 +354,7 @@ units that continue transmitting while the vehicle is off, it would be
 necessarily to additionally check whether the car has in fact moved more than
 a threshold roaming distance (using `GeometryEngine.geodesicDistanceOnWGS84`).
 
+### Common destination of trips from common origin
 
 The input for the second-stage MapReduce job, was the output of the first
 stage, namely the longitude, latitude, and grid-cell bounds of both the origin
@@ -389,6 +400,8 @@ common destination cell.
         }
     
 
+### Execute MapReduce Jobs
+
 To execute the calculations, the MapReduce jobs can be invoked by using either
 the _Execute Workflow_ tool in ArcMap, or the command line.  Here are recipes
 for invoking the MapReduce jobs from command line:
@@ -406,6 +419,8 @@ for invoking the MapReduce jobs from command line:
       -libjars ../lib/esri-geometry-api.jar \
       1 'out-trips-inferred/part-r-*' out-trips-by-origin-cell
     
+
+### Import into ArcMap and visualize
 
 The tab-separated output was converted to JSON - a format suitable for import
 to ArcMap - with Hive queries using ST_Geometry functions from GIS Tools for
@@ -473,6 +488,8 @@ darker purple squares, to highlight candidate areas for carpool suggestions.
 
 ![Map: by origin cell, count of car trips to common destination cell](cars-jp20b.png)  
 
+### Conclusions
+
 A potential further study could additionally consider the following:
 
   * The location and distance of the most-common destination cell, for each origin cell of interest;
@@ -482,7 +499,7 @@ The following open-source projects, from GIS Tools for Hadoop on Github, were
 used:
 
   * The [geometry-api-java library](https://github.com/Esri/geometry-api-java) was used for computing equal-area grid cells.
-  * From [spatial-framework-for-hadoop](https://github.com/Esri/spatial-framework-for-hadoop), Hive UDFs were used to create geometries from raw data, along with API utilities to export and import data to and from JSON.
+  * From [spatial-framework-for-hadoop](https://github.com/Esri/spatial-framework-for-hadoop), Hive UDFs were used to create geometries from raw data, and API utilities were used to import and export data from and to JSON.
   * Geoprocessing tools were used from [geoprocessing-tools-for-hadoop](https://github.com/Esri/geoprocessing-tools-for-hadoop), to import results into ArcMap for visualization, as well as to export a polygon of Japan for gridding.  
 
 The MapReduce calculations ran in under an hour on a single-node development
@@ -490,5 +507,5 @@ instance of Hadoop. This provides a proof of concept of using a Hadoop cluster
 to run similar calculations on much bigger data sets.
 
 The complete source code is [available on
-Github](https://github.com/randallwhitman/gis-tools-for-hadoop).  
+Github](https://github.com/randallwhitman/gis-tools-for-hadoop).
 
