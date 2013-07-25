@@ -459,14 +459,17 @@ Coordinate Systems, Asia, Tokyo.
 
 ![[Feature Class Properties: Spatial Reference]](spatial-reference-arcmap.png)  
 
-Finally, we used ArcMap to visualize the results in a map. The feature class
-imported from JSON, has an integer field for the count of the trips from each
-origin cell, that ended in the most common destination cell. In ArcMap, it is
-possible to use this integer-value field for symbols varying by quantity. The
-map shows cells that were the origin of five or more trips to a common
-destination cell. Cells that were the origin of 11 or trips to a common
-destination, are symbolized with bigger and darker purple squares, to
-highlight candidate areas for carpool suggestions.
+Finally, we used ArcMap to visualize the results in a map. As the JSON that
+was imported had all fields as text ([rather than
+number](https://github.com/Esri/spatial-framework-for-hadoop/issues/24)), it
+was necessary to add an integer field for the count of the trips from each
+origin cell, that ended in the most common destination cell - which the ArcMap
+field calculator populated handily (from the text field that contained the
+number as character digits). Then, it was possible to use this integer-value
+field for symbols varying by quantity. The map shows cells that were the
+origin of five or more trips to a common destination cell. Cells that were the
+origin of 11 or trips to a common destination, are symbolized with bigger and
+darker purple squares, to highlight candidate areas for carpool suggestions.
 
 ![Map: by origin cell, count of car trips to common destination cell](cars-jp20b.png)  
 

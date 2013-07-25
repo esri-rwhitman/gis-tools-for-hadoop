@@ -510,10 +510,13 @@ Geographic Coordinate Systems, Asia, Tokyo.
 </p>
 
 <p> Finally, we used ArcMap to visualize the results in a map.
-The feature class imported from JSON, has an integer field for the count of the trips
-from each origin cell, that ended in the most common destination cell.
-In ArcMap, it
-is possible to use this integer-value field for symbols varying by
+As the JSON that was imported had all fields as text
+(<a href="https://github.com/Esri/spatial-framework-for-hadoop/issues/24">rather than number</a>),
+it was necessary to add an integer field for the count of the trips
+from each origin cell, that ended in the most common destination cell -
+which the ArcMap field calculator populated handily (from the text
+field that contained the number as character digits).  Then, it
+was possible to use this integer-value field for symbols varying by
 quantity. The map shows
 cells that were the origin of five or more trips to a common
 destination cell. Cells that were the origin of 11 or trips to a
