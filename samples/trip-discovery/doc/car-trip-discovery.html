@@ -16,7 +16,7 @@ The position data consists of longitude and latitude along with date, time, and 
 We used the Hadoop MapReduce framework for distributed parallel
 computation, considering its capability for analyzing larger data sets.</p>
 
-<h3>Study Area</h3>
+<a name="studyarea"><h3>Study Area</h3></a>
 
 The study area was the country of Japan, selected from World Map in the
 data included with ArcGIS. It was projected to the Tokyo Geographic
@@ -79,7 +79,7 @@ destination point of each inferred trip.<br>
 </p>
 
 
-<h3>Read Input CSV</h3>
+<a name="inputcsv"><h3>Read Input CSV</h3></a>
 
 <p>Columns of the CSV file of GPS positions, include vehicle ID, date,
 time, position as longitude and latitude (degrees-minutes-seconds),
@@ -88,7 +88,7 @@ reads the input CSV data, and treats the combination of car-ID and date
 as the key - and the remainder of the input fields, as the value
 associated with such key.&nbsp; Thus, the data is grouped by car and
 date, for passing to the reducer, a separate list of position
-records for each car and date.<br>
+records for each car and date.
 </p>
 
 <pre style="overflow:auto">
@@ -135,7 +135,7 @@ which would need to be sorted by date and time.<br>
 </p>
 
 
-<h3>Create grid</h3>
+<a name="creategrid"><h3>Create grid</h3></a>
 
 <p>The grid of cells to cover Japan, is calculated in the setup of the
 reducer of the first MapReduce application - once per reducer
@@ -247,7 +247,7 @@ row of the grid.<br>
 </pre>
 
 
-<h3>Cell containing location point</h3>
+<a name="querygrid"><h3>Cell containing location point</h3></a>
 
 <p>Finding the cell containing a location point, when the cells are
 stored as an array of bounds, and each row has the same number of
@@ -291,7 +291,7 @@ Then <code>cellIndex = xIndex + xCount * yIndex</code>.<br>
 </pre>
 
 
-<h3>Discover trips: origin and destination</h3>
+<a name="infertrips"><h3>Discover trips: origin and destination</h3></a>
 
 <p>Inferred trips were calculated as follows.&nbsp; The GPS units in
 the cars transmit a point of position data about every 30 seconds (with
@@ -394,10 +394,8 @@ data from GPS units that continue transmitting while the vehicle is
 off, it would be necessarily to additionally check whether the car has
 in fact moved more than a threshold roaming distance (using <code>GeometryEngine.geodesicDistanceOnWGS84</code>).</p>
 
-<p>
-</p>
 
-<h3>Common destination of trips from common origin</h3>
+<a name="tripincommon"><h3>Common destination of trips from common origin</h3></a>
 
 <p>The input for the second-stage MapReduce job, was the output of the
 first stage, namely the longitude, latitude, and grid-cell bounds of
@@ -444,7 +442,7 @@ number of trips ending in the most-common destination cell.</p>
 </pre>
 
 
-<h3>Execute MapReduce Jobs</h3>
+<a name="execmapred"><h3>Execute MapReduce Jobs</h3></a>
 
 <p>To execute the calculations, the MapReduce jobs can be invoked by
 using either the <em>Execute Workflow</em> tool in ArcMap, or the
@@ -466,7 +464,7 @@ env HADOOP_CLASSPATH=../lib/esri-geometry-api.jar \
 </pre>
 
 
-<h3>Import into ArcMap and visualize</h3>
+<a name="toarcmap"><h3>Import into ArcMap and visualize</h3></a>
 
 <p>The tab-separated output was converted to JSON - a format suitable
 for import to ArcMap - with Hive queries using ST_Geometry
@@ -541,7 +539,7 @@ squares, to highlight candidate areas for carpool suggestions.</p>
 
 <img style="width: 640px; height: 495px;" alt="Map: by origin cell, count of car trips to common destination cell" src="cars-jp20b.png"><br>
 
-<h3>Conclusions</h3>
+<a name="conclusions"><h3>Conclusions</h3></a>
 
 <p>A potential further study could additionally consider the following:</p>
 
