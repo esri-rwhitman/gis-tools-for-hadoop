@@ -91,7 +91,7 @@ date, for passing to the reducer, a separate list of position
 records for each car and date.<br>
 </p>
 
-<pre>
+<pre style="overflow:auto">
 public class TripCellMapper extends Mapper&lt;LongWritable, Text, Text, CarSortWritable&gt; {
 
     // column indices for values in the vehicle CSV
@@ -159,7 +159,7 @@ and dividing into the constant area to get the Y-axis angle for each
 row of the grid.<br>
 </p>
 
-<pre>
+<pre style="overflow:auto">
     private void buildGrid(double gridSide) {   // Nominal length of side of grid cell (meters)
         double cellArea = gridSide*gridSide;
         latMax = envelope.getYMax() + .005;  // +.005 to catch nearby outliers (approx. 500m)
@@ -257,7 +257,7 @@ possible overshoot or undershoot, due to varying cell height.&nbsp;
 Then <code>cellIndex = xIndex + xCount * yIndex</code>.<br>
 </p>
 
-<pre>
+<pre style="overflow:auto">
     private int queryGrid(double longitude, double latitude) {
         int cellIndex; // xIdx + xCount * yIdx
         if (longitude &gt;= lonMin &amp;&amp; longitude &lt;= lonMax  &amp;&amp;
@@ -301,10 +301,10 @@ lapse of more than 15 minutes, it interprets the position before the
 lapse as the destination of a trip, and the position after the lapse as
 the origin of a new trip. Also, the last position of the car in the
 day, is interpreted as the destination of a trip (except in the case of
-a lone position point).<br>
+a lone position point).
 </p>
 
-<pre>
+<pre style="overflow:auto">
     public void reduce(Text key, Iterable&lt;CarSortWritable&gt; values, Context ctx)
         throws IOException, InterruptedException {
 
@@ -408,7 +408,7 @@ each origin cell, the reducer counted trips by grid cell containing the
 destination of the trip, to determine - for that origin cell - the
 number of trips ending in the most-common destination cell.</p>
 
-<pre>
+<pre style="overflow:auto">
     public void reduce(Text key, Iterable&lt;TripInCommonWritable&gt; values, Context ctx)
         throws IOException, InterruptedException {
 
@@ -452,7 +452,7 @@ command
 line.&nbsp; Here are recipes for invoking the MapReduce jobs from
 command line:</p>
 
-<pre>
+<pre style="overflow:auto">
 env HADOOP_CLASSPATH=../lib/esri-geometry-api.jar:../lib/spatial-sdk-hadoop.jar \
   hadoop jar trip-discovery.jar com.esri.hadoop.examples.trip.TripCellDriver \
   -libjars ../lib/esri-geometry-api.jar,../lib/spatial-sdk-hadoop.jar \
@@ -472,7 +472,7 @@ env HADOOP_CLASSPATH=../lib/esri-geometry-api.jar \
 for import to ArcMap - with Hive queries using ST_Geometry
 functions from GIS Tools for Hadoop.</p>
 
-<pre>
+<pre style="overflow:auto">
 create external table trips_by_origin_cell(leftlon double, botlat double, rightlon double, toplat double,
                                            totnum int, samedest int, pct double,
                                            destlhs double, destbot double, destrhs double, desttop double)
